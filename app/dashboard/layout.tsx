@@ -1,5 +1,7 @@
 //屬於 dashboard的layout
 import SideNav from '@/app/ui/dashboard/sidenav';
+
+// export const experimental_ppr = true; // 對特定路線採用 PPR
  
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

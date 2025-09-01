@@ -31,6 +31,7 @@ export default async function InvoicesTable({
                         className="mr-2 rounded-full"
                         width={28}
                         height={28}
+                        //安裝eslint後, img沒有alt屬性, 會報錯
                         alt={`${invoice.name}'s profile picture`}
                       />
                       <p>{invoice.name}</p>

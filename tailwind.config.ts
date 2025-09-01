@@ -19,13 +19,7 @@ const config: Config = {
         },
       },
     },
-    keyframes: {
-      shimmer: {
-        '100%': {
-          transform: 'translateX(100%)',
-        },
-      },
-    },
+    // Shimmer 動畫在 global.css 中定義，避免 SSR 問題
   },
   plugins: [require('@tailwindcss/forms')],
 };

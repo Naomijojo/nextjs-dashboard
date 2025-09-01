@@ -11,17 +11,23 @@ import { formatCurrency } from './utils';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
+// 配置一個常數統一控制：模擬延遲 2秒
+const SIMULATED_DELAY_MS = 2000; 
+
+// 獲取 revenue 資料
 export async function fetchRevenue() {
   try {
-    // Artificially delay a response for demo purposes.
-    // Don't do this in production :)
 
-    // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
-
+    console.log('Fetching revenue data...');
+    // CH8- 延遲 2秒來獲取資料
+    await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS));
     const data = await sql<Revenue[]>`SELECT * FROM revenue`;
 
-    // console.log('Data fetch completed after 3 seconds.');
+
+    // 印出檢查
+    console.log('revenue 收入資料結構：', JSON.stringify(data, null, 2));
+    console.log('revenue 資料筆數：', data.length);
+    console.log('revenue 資料獲取完成');
 
     return data;
   } catch (error) {
@@ -30,8 +36,14 @@ export async function fetchRevenue() {
   }
 }
 
+// 使用 SQL 查詢僅擷取最後 5 張發票
 export async function fetchLatestInvoices() {
   try {
+    
+    console.log('Fetching latest invoices data...');
+    // CH8- 延遲 2秒來獲取資料
+    await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS));
+    
     const data = await sql<LatestInvoiceRaw[]>`
       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
       FROM invoices
@@ -43,6 +55,8 @@ export async function fetchLatestInvoices() {
       ...invoice,
       amount: formatCurrency(invoice.amount),
     }));
+    
+
     return latestInvoices;
   } catch (error) {
     console.error('Database Error:', error);
@@ -50,11 +64,14 @@ export async function fetchLatestInvoices() {
   }
 }
 
+// 獲取四張 card 資料
 export async function fetchCardData() {
   try {
-    // You can probably combine these into a single SQL query
-    // However, we are intentionally splitting them to demonstrate
-    // how to initialize multiple queries in parallel with JS.
+    console.log('Fetching card data...');
+    // CH8- 延遲 2秒來獲取資料
+    await new Promise((resolve) => setTimeout(resolve, SIMULATED_DELAY_MS));
+    
+    // 使用 SQL 獲取已收取的發票總額、未收取的發票總額、發票總數、客戶總數
     const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices`;
     const customerCountPromise = sql`SELECT COUNT(*) FROM customers`;
     const invoiceStatusPromise = sql`SELECT
@@ -68,10 +85,19 @@ export async function fetchCardData() {
       invoiceStatusPromise,
     ]);
 
+    console.log('card 資料結構：', JSON.stringify(data, null, 2));
+
     const numberOfInvoices = Number(data[0][0].count ?? '0');
     const numberOfCustomers = Number(data[1][0].count ?? '0');
     const totalPaidInvoices = formatCurrency(data[2][0].paid ?? '0');
     const totalPendingInvoices = formatCurrency(data[2][0].pending ?? '0');
+
+    console.log('需要的card資料：', {
+      numberOfInvoices,
+      numberOfCustomers,
+      totalPaidInvoices,
+      totalPendingInvoices,
+    });
 
     return {
       numberOfCustomers,
@@ -120,7 +146,7 @@ export async function fetchFilteredInvoices(
     throw new Error('Failed to fetch invoices.');
   }
 }
-
+// 獲取發票總頁數
 export async function fetchInvoicesPages(query: string) {
   try {
     const data = await sql`SELECT COUNT(*)
@@ -142,6 +168,25 @@ export async function fetchInvoicesPages(query: string) {
   }
 }
 
+// 獲取客戶總頁數
+export async function fetchCustomersPages(query: string) {
+  try {
+    const data = await sql`SELECT COUNT(*)
+    FROM customers
+    WHERE
+      customers.name ILIKE ${`%${query}%`} OR
+      customers.email ILIKE ${`%${query}%`}
+  `;
+
+    const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch total number of customers.');
+  }
+}
+
+// 獲取特定發票
 export async function fetchInvoiceById(id: string) {
   try {
     const data = await sql<InvoiceForm[]>`
@@ -160,7 +205,7 @@ export async function fetchInvoiceById(id: string) {
       amount: invoice.amount / 100,
     }));
 
-    return invoice[0];
+    return invoice[0]; // 回傳第一筆資料
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoice.');
@@ -184,7 +229,9 @@ export async function fetchCustomers() {
   }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+export async function fetchFilteredCustomers(query: string, currentPage: number) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
   try {
     const data = await sql<CustomersTableType[]>`
 		SELECT
@@ -202,6 +249,7 @@ export async function fetchFilteredCustomers(query: string) {
         customers.email ILIKE ${`%${query}%`}
 		GROUP BY customers.id, customers.name, customers.email, customers.image_url
 		ORDER BY customers.name ASC
+    LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
 	  `;
 
     const customers = data.map((customer) => ({

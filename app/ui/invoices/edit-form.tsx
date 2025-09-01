@@ -10,6 +10,11 @@ import {
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 
+// 添加錯誤提醒處理
+import { updateInvoice, State } from '@/app/lib/actions';
+import { useActionState } from 'react';
+
+
 export default function EditInvoiceForm({
   invoice,
   customers,
@@ -17,9 +22,16 @@ export default function EditInvoiceForm({
   invoice: InvoiceForm;
   customers: CustomerField[];
 }) {
+  // 錯誤處理：初始化狀態, 防止錯誤
+  const initialState: State = { message: null, errors: {} };
+  const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
+  const [state, formAction] = useActionState(updateInvoiceWithId, initialState);
+
   return (
-    <form>
+    // 更新發票
+    <form action={formAction}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
+
         {/* Customer Name */}
         <div className="mb-4">
           <label htmlFor="customer" className="mb-2 block text-sm font-medium">
@@ -66,7 +78,7 @@ export default function EditInvoiceForm({
           </div>
         </div>
 
-        {/* Invoice Status */}
+        {/* Invoice 狀態: pending 或 paid */}
         <fieldset>
           <legend className="mb-2 block text-sm font-medium">
             Set the invoice status

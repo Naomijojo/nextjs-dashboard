@@ -1,0 +1,11 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Next.js Logo Background -->
+  <rect width="32" height="32" rx="6" fill="#000000"/>
+  
+  <!-- Next.js Triangle -->
+  <path d="M16 6L26 23H6L16 6Z" fill="#FFFFFF"/>
+  
+  <!-- Inner Triangle Detail -->
+  <path d="M20.5 23H24L16 9L20.5 23Z" fill="#000000"/>
+  <circle cx="16" cy="20" r="1.5" fill="#000000"/>
+</svg>

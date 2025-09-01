@@ -1,3 +1,4 @@
+// 假數據寫入真實的 PostgreSQL 數據庫 
 import bcrypt from 'bcrypt';
 import postgres from 'postgres';
 import { invoices, customers, revenue, users } from '../lib/placeholder-data';

@@ -1,3 +1,44 @@
-export default function InvoicesPage() {
-  return <p>InvoicesPage</p>
+import Pagination from '@/app/ui/invoices/pagination'; //允許使用者在發票頁面之間導航
+import Search from '@/app/ui/search';          //搜尋發票欄位
+import Table from '@/app/ui/invoices/table';  //顯示發票表格
+import { CreateInvoice } from '@/app/ui/invoices/buttons';
+import { lusitana } from '@/app/ui/fonts';
+import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
+import { Suspense } from 'react';
+import { fetchInvoicesPages } from '@/app/lib/data';
+ 
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Invoices',
+};
+
+export default async function Page(props: {
+  searchParams?: Promise<{
+    query?: string;
+    page?: string;
+  }>
+}) {
+  const searchParams = await props.searchParams;
+  const query = searchParams?.query || '';
+  const currentPage = Number(searchParams?.page) || 1;
+  const totalPages = await fetchInvoicesPages(query);
+
+  return (
+    <div className="w-full">
+      <div className="flex w-full justify-between items-center">
+        <h1 className={`${lusitana.className} text-2xl`}>Invoices</h1>
+      </div>
+      <div className="mt-4 flex justify-between items-center gap-2 md:mt-8">
+        <Search placeholder="Search invoices..." />
+        <CreateInvoice />
+      </div>
+      <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
+        <Table query={query} currentPage={currentPage} />
+      </Suspense>
+      <div className="mt-5 flex w-full justify-center">
+        <Pagination totalPages={totalPages} /> 
+      </div>
+    </div>  
+  )
 }
